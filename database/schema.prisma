@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model City {
+  id        String   @id @default(cuid())
+  name      String
+  state     String?
+  country   String   @default("India")
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  aqiReadings    AqiReading[]
+  tempReadings   TemperatureReading[]
+  alerts         Alert[]
+
+  @@unique([name, country])
+  @@index([latitude, longitude])
+}
+
+model AqiReading {
+  id          String   @id @default(cuid())
+  cityId      String
+  aqi         Int
+  pm25        Float?
+  pm10        Float?
+  o3          Float?
+  no2         Float?
+  so2         Float?
+  co          Float?
+  category    AqiCategory
+  recordedAt  DateTime
+  source      String    @default("sensor")
+  createdAt   DateTime  @default(now())
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@index([cityId, recordedAt])
+  @@index([recordedAt])
+  @@index([category])
+}
+
+model TemperatureReading {
+  id          String   @id @default(cuid())
+  cityId      String
+  temperature Float
+  humidity    Float?
+  feelsLike   Float?
+  recordedAt  DateTime
+  source      String   @default("sensor")
+  createdAt   DateTime @default(now())
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@index([cityId, recordedAt])
+  @@index([recordedAt])
+}
+
+model Alert {
+  id        String      @id @default(cuid())
+  cityId    String
+  type      AlertType
+  severity  AlertSeverity
+  message   String
+  isActive  Boolean     @default(true)
+  startedAt DateTime    @default(now())
+  endedAt   DateTime?
+  createdAt DateTime    @default(now())
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@index([cityId, isActive])
+  @@index([type, isActive])
+}
+
+enum AqiCategory {
+  GOOD
+  MODERATE
+  UNHEALTHY_SENSITIVE
+  UNHEALTHY
+  VERY_UNHEALTHY
+  HAZARDOUS
+}
+
+enum AlertType {
+  AQI_SPIKE
+  AQI_SUSTAINED_HIGH
+  TEMPERATURE_EXTREME
+  HEALTH_ADVISORY
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

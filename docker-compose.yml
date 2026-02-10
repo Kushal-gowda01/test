@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  # ─── PostgreSQL Database ───
+  db:
+    image: postgres:16-alpine
+    container_name: climateiq-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: climateiq
+      POSTGRES_PASSWORD: climateiq_secret
+      POSTGRES_DB: climateiq
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U climateiq']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis Cache ───
+  redis:
+    image: redis:7-alpine
+    container_name: climateiq-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Next.js Application ───
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: climateiq-app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://climateiq:climateiq_secret@db:5432/climateiq
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
