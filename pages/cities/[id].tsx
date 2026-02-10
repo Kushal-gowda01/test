@@ -20,17 +20,14 @@ export default function CityDetailPage() {
   const { id } = router.query;
   const [period, setPeriod] = useState('24h');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: city, loading: cityLoading } = useFetch<any>(`/api/cities/${id}`, {
     enabled: !!id,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: aqiData } = useFetch<any>(`/api/aqi?cityId=${id}&period=${period}`, {
     enabled: !!id,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tempData } = useFetch<any>(`/api/temperature?cityId=${id}&period=${period}`, {
     enabled: !!id,
   });

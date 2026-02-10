@@ -37,7 +37,6 @@ export default function DashboardPage() {
   const [selectedCityName, setSelectedCityName] = useState('');
   const [period, setPeriod] = useState('24h');
   const [discovering, setDiscovering] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [discoveredData, setDiscoveredData] = useState<any>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -113,7 +112,6 @@ export default function DashboardPage() {
   };
 
   // Fetch city detail data (skip if we already have discoveredData)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fetchedCityData } = useFetch<any>(
     selectedCity && !discoveredData ? `/api/cities/${selectedCity}` : '',
     { enabled: !!selectedCity && !discoveredData }
@@ -122,19 +120,16 @@ export default function DashboardPage() {
   // Use discovered data if available, otherwise use fetched data
   const cityData = discoveredData || fetchedCityData;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: aqiData } = useFetch<any>(
     selectedCity ? `/api/aqi?cityId=${selectedCity}&period=${period}` : '',
     { enabled: !!selectedCity }
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tempData } = useFetch<any>(
     selectedCity ? `/api/temperature?cityId=${selectedCity}&period=${period}` : '',
     { enabled: !!selectedCity }
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: alerts } = useFetch<any[]>(
     selectedCity ? `/api/alerts?cityId=${selectedCity}` : '',
     { enabled: !!selectedCity }
