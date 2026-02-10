@@ -2,12 +2,18 @@ import Redis from 'ioredis';
 
 declare global {
   // eslint-disable-next-line no-var
-  var redis: Redis | undefined;
+  var redis: Redis | null | undefined;
 }
 
-function createRedisClient(): Redis {
+function createRedisClient(): Redis | null {
+  // Skip Redis if env vars not configured
+  if (!process.env.REDIS_HOST) {
+    console.log('⚠️  Redis not configured, caching disabled');
+    return null;
+  }
+
   const client = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
+    host: process.env.REDIS_HOST,
     port: parseInt(process.env.REDIS_PORT || '6379'),
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: 3,
@@ -29,7 +35,7 @@ function createRedisClient(): Redis {
   return client;
 }
 
-export const redis = global.redis || createRedisClient();
+export const redis = global.redis !== undefined ? global.redis : createRedisClient();
 
 if (process.env.NODE_ENV !== 'production') {
   global.redis = redis;
@@ -37,6 +43,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Cache helper functions
 export async function getCache<T>(key: string): Promise<T | null> {
+  if (!redis) return null;
   try {
     const data = await redis.get(key);
     return data ? JSON.parse(data) : null;
@@ -47,6 +54,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
 }
 
 export async function setCache(key: string, data: unknown, ttlSeconds: number = 300): Promise<void> {
+  if (!redis) return;
   try {
     await redis.setex(key, ttlSeconds, JSON.stringify(data));
   } catch {
@@ -55,6 +63,7 @@ export async function setCache(key: string, data: unknown, ttlSeconds: number = 
 }
 
 export async function invalidateCache(pattern: string): Promise<void> {
+  if (!redis) return;
   try {
     const keys = await redis.keys(pattern);
     if (keys.length > 0) {
