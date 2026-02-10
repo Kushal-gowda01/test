@@ -20,11 +20,9 @@ export default function LoadingSkeleton({ className, variant = 'card', count = 1
         <SkeletonPulse className="h-5 w-40 mb-4" />
         <div className="flex items-end gap-2 h-[250px]">
           {Array.from({ length: 12 }).map((_, i) => (
-            <SkeletonPulse
-              key={i}
-              className="flex-1 rounded-t-md"
-              style={{ height: `${Math.random() * 60 + 20}%` } as React.CSSProperties}
-            />
+            <div key={i} style={{ height: `${Math.random() * 60 + 20}%` }} className="flex-1">
+              <SkeletonPulse className="h-full rounded-t-md" />
+            </div>
           ))}
         </div>
       </div>
